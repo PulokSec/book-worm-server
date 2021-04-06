@@ -7,7 +7,7 @@ const port = process.env.PORT || 5000;
 require('dotenv').config();
 const MongoClient = require('mongodb').MongoClient;
 
-app.use(bodyParser.json());
+app.use(express.json());
 app.use(cors());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.iyt5e.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
@@ -26,10 +26,16 @@ client.connect(err => {
     })
   })
 
-    app.get('/order',(req, res) =>{
+    app.get('/orders',(req, res) =>{
       orderCollection.find()
       .toArray((err,documents) =>{
-        res.send(documents[0]);
+        res.send(documents);
+      })
+    })
+    app.get('/order',(req, res) =>{
+      orderCollection.find({"loggedInUser.email":req.query.email})
+      .toArray((err,documents) =>{
+        res.send(documents);
       })
     })
 
@@ -49,23 +55,12 @@ client.connect(err => {
     })
   })
 
-  // app.patch('/updateBook/:id', (req, res) => {
-  //   bookCollection.updateOne({_id: ObjectID(req.params.id)},
-  //   {
-  //     $set: {name: req.body.name, author: req.body.author, price: req.body.price}
-  //   })
-  //   .then( result => {
-  //     res.send(result.modifiedCount > 0)
-  //   })
-  // })
-
   app.post('/addOrder',(req, res) => {
     const order = req.body;
-    console.log(order);
         orderCollection.insertOne(order)
         .then(result => {
             console.log(result.insertedCount);
-            res.send(result.insertedCount)
+            res.send(result.insertedCount > 0);
   })
 });
 
